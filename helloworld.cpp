@@ -17,12 +17,17 @@ int main(){
     // result = ExecuteCMD(cmd.c_str());
 
 
-    CPU_OCCUPY cpu;
-    pcpu(&cpu);
+    CPU_OCP cpu1;
+    CPU_OCP cpu2;
+    while(1)
+    {    getCpuOccupy(&cpu1);
+        sleep(1);
+        getCpuOccupy(&cpu2);
+        double cpuUsed = calCpuOccupy(&cpu1, &cpu2);
 
-    printf("testing...\n");
-    cout << endl;
+        printf("testing...\n");
 
+        cout << cpuUsed << endl;}
     
     // serverTCP stcp;
     // stcp.stcpListen(dport);
