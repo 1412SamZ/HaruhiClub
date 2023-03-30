@@ -8,6 +8,10 @@
                 "-fdiagnostics-color=always",
                 "-g",
                 "${file}",
+                "-l",
+                "mysqlclient",
+                "-I",
+                "include",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}"
             ],
