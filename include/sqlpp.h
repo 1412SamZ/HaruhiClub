@@ -33,12 +33,16 @@ class Mapi{
     bool next();
 
     string value(int index);
-
+        
     bool transaction();
 
     bool commit();
 
     bool rollback();
+
+
+
+
 
 };
 
@@ -102,13 +106,15 @@ bool Mapi::query(string sql){
 bool Mapi::next(){
     if(mRes != nullptr){
         mRow = mysql_fetch_row(mRes);
+        if(mRow == NULL)return false;
     }
+    else return false;    
     return true;
 }
 
-string Mapi::value(int index){
+string Mapi::value(int index = 0){
     int rowNumber = mysql_num_fields(mRes);
-    if(rowNumber >= rowNumber || rowNumber < 0){
+    if(index >= rowNumber || index < 0){
         return string();
     }
     char* val =  mRow[index];
@@ -116,6 +122,9 @@ string Mapi::value(int index){
     return string(val, length); // avoid '\0'
 
 }
+
+
+
 
 bool Mapi::transaction(){
     return mysql_autocommit(conn, false);
@@ -134,3 +143,4 @@ void Mapi::ReleaseResult(){
         mysql_free_result(mRes);
     }
 }
+

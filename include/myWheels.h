@@ -22,7 +22,7 @@ std::string ExecuteCMD(const char* cmd)
         {
             strcat(result, buf_ps);
             if(strlen(result) > CMD_RESULT_BUF_SUZE - 1)break;
-            //memset(buf_ps, 0, CMD_RESULT_BUF_SUZE);
+            memset(buf_ps, 0, CMD_RESULT_BUF_SUZE);
         }
         pclose(ptr);
         ptr = nullptr;
