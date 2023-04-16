@@ -20,14 +20,18 @@ int main(int argc, char** argv) {
 	while(1)
 	{
 		std::getline(std::cin, inputLine);
-		ts->sendMsg(inputLine);
-		// ts->recvMsg();
-		char* buf = new char[100];
-		auto r = ::recv(ts->getConnectFd(), buf, 100, 0);
-		std::string ssss = (buf+9+40+1+8);
-		std::cout << ssss;
-		delete buf;
-		// printf("%s\n", output.c_str());
+
+		v2msg msg("client", inputLine);
+
+		ts->SendMsgV2(msg, ts->getConnectFd());
+		std::cout << "msg sent" << std::endl;
+		
+		continue;
+		int code;
+		std::string str = ts->recvMsgV2(ts -> getConnectFd(), &code);
+		if(code == 0)break;
+		std::cout << "mess from server: " << str << std::endl;
+		
 	}
 	
 

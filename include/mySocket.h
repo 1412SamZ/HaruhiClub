@@ -3,7 +3,7 @@
 #ifndef __MY_SOCKET_H__
 #define __MY_SOCKET_H__
 #if __linux__
-#include <unistd.h>  //close 和 shutdown
+#include <unistd.h> //close 和 shutdown
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -16,27 +16,25 @@
 #define wsAd sin_addr.s_addr
 #define wsF sin_family
 #define wsP sin_port
-#define sitos (struct sockaddr*)
+#define sitos (struct sockaddr *)
 
 typedef unsigned int ADDRLEN;
 
-
 #define CLOSE_SOCKET(x) ::close(x);
-
 
 #elif _WIN32
 #include <Ws2tcpip.h>
 
 #include <winsock.h>
-#pragma comment(lib,"ws2_32.lib")
-
+#pragma comment(lib, "ws2_32.lib")
 
 #define CLOSE_SOCKET(x) closesocket(x);
 
-
-class WSAInit {
+class WSAInit
+{
 public:
-    WSAInit() {
+    WSAInit()
+    {
         WSADATA wsaData;
         if (WSAStartup(MAKEWORD(2, 2), &wsaData))
         {
@@ -45,7 +43,8 @@ public:
         }
     }
 
-    ~WSAInit() {
+    ~WSAInit()
+    {
         WSACleanup();
     }
 };
@@ -56,31 +55,32 @@ static WSAInit wsa;
 #define wsAd sin_addr.S_un.S_addr
 #define wsF sin_family
 #define wsP sin_port
-#define sitos (struct sockaddr*)
+#define sitos (struct sockaddr *)
 
-//#define SET_IPv4(ip, strtAd) inet_pton(ipv4, ip.data(), &strtAd.wsAd);
+// #define SET_IPv4(ip, strtAd) inet_pton(ipv4, ip.data(), &strtAd.wsAd);
 
-#define SET_IPv4(str_ip, strtAd)strtAd.wsAd = inet_addr(str_ip.c_str());
+#define SET_IPv4(str_ip, strtAd) strtAd.wsAd = inet_addr(str_ip.c_str());
 
 typedef int ADDRLEN;
 
-
 #endif
 
-
-#include<iostream>
+#include <iostream>
 #include <string>
 #include <cassert>
 
-
-
 #define CREATESOCKETv4() socket(ipv4, SOCK_STREAM, 0);
 
-
-#define STRPRT_EQ_M1(x, str) if(x == -1)std::cout << str << std::endl;
-#define STRPRT_EQ_ZR(x, str) if(x == 0)std::cout << str << std::endl;
-#define STRPRT(str)std::cout << str << std::endl;
-#define RET_EQ_M1(x, ret) if(x == -1)return ret;
+#define STRPRT_EQ_M1(x, str) \
+    if (x == -1)             \
+        std::cout << str << std::endl;
+#define STRPRT_EQ_ZR(x, str) \
+    if (x == 0)              \
+        std::cout << str << std::endl;
+#define STRPRT(str) std::cout << str << std::endl;
+#define RET_EQ_M1(x, ret) \
+    if (x == -1)          \
+        return ret;
 typedef unsigned short U16;
 typedef unsigned short port_t;
 
@@ -91,18 +91,20 @@ typedef unsigned int U32;
 #define DATA_BUFF_SIZE 4096
 
 // exp..al
-#define edl + "\n"
+#define edl +"\n"
 #define errmsg "Error: " +
 
 // v2msg define
 #define REQUEST_REGISTER 1
 #define REQUEST_LOGIN 2
-#define MSGTYPE_ROOM 1
-#define MSGTYPE_PRIVATE 2
+#define REQUEST_FILE 3
+#define REQUEST_TOP 4
+#define REQUEST_SYSINFO 5
 
-
-
-
+#define MSGTYPE_START_REQUEST 1
+#define MSGTYPE_UPDATE_REQUEST 2
+#define MSGTYPE_ROOM 3
+#define MSGTYPE_PRIVATE 4
 
 /*
 windows socket流程
@@ -114,10 +116,6 @@ windows socket流程
 x. 可以创建一个类，为wsa，析构函数写close
 
 */
-
-
-
-
 
 /*
 套接字通信，两部分函数
@@ -138,41 +136,39 @@ read write
 
 */
 
-
-
 // 封装
 typedef struct MyMsgV2
 {
-    unsigned long header;
+    unsigned long long header;
     char requestType;
     char username[40];
     char msgType;
-    unsigned long msgLength;
-    const char* msg;
-    MyMsgV2(): header(0)
+    unsigned long long msgLength;
+    std::string msg;
+    MyMsgV2() : header(0)
     {
         std::string msgStructStr = "DEFAULT_USER";
         memset(username, 0, sizeof username);
-        for(int i = 0; i < msgStructStr.size(); i++)
+        for (int i = 0; i < msgStructStr.size(); i++)
         {
             username[i] = msgStructStr[i];
         }
     };
-    MyMsgV2(std::string userName): header(0)
+    MyMsgV2(std::string userName) : header(0)
     {
-        
+
         memset(username, 0, sizeof username);
-        for(int i = 0; i < userName.size(); i++)
+        for (int i = 0; i < userName.size(); i++)
         {
             username[i] = userName[i];
         }
     };
 
-    MyMsgV2(const std::string& userName, const std::string& msgToSend): header(0), msg(msgToSend.c_str())
+    MyMsgV2(const std::string &userName, const std::string &msgToSend) : header(0), msg(msgToSend.c_str())
     {
-        
+
         memset(username, 0, sizeof username);
-        for(int i = 0; i < userName.size(); i++)
+        for (int i = 0; i < userName.size(); i++)
         {
             username[i] = userName[i];
         }
@@ -180,13 +176,19 @@ typedef struct MyMsgV2
         // msg.msg = msgStructStr.c_str();
 
         // header
-            header = sizeof(requestType)
-            + sizeof(username)
-            + sizeof(msgType)
-            + sizeof(msgLength)
-            + msgLength;
+        header = sizeof(requestType) + sizeof(username) + sizeof(msgType) + sizeof(msgLength) + msgLength;
     };
-}v2msg;
+    void setMessage(const std::string &msg)
+    {
+        msgLength = msg.size();
+        header = sizeof(requestType) + sizeof(username) + sizeof(msgType) + sizeof(msgLength) + msgLength;
+        this->msg = msg;
+    }
+    std::string getMessage()
+    {
+        return msg;
+    }
+} v2msg;
 
 class TcpSocket
 {
@@ -195,189 +197,25 @@ public:
     ~TcpSocket();
     TcpSocket(int socket);
     int toHost(std::string ip, port_t port);
+
+    // 客户端和服务端通信的时候 客户端需要用这个
     int getConnectFd();
-    bool sendMsg(const std::string& msg);
+    bool sendMsg(const std::string &msg);
     std::string recvMsg(size_t buffer_size);
 
-    bool SendMsgV2(const v2msg& msgStruct, int cfd);
-    std::string recvMsgV2();
+    bool SendMsgV2(const v2msg &msgStruct, int cfd = -1);
+    std::string recvMsgV2(int cfd, int *code);
+    v2msg recvMsgStructV2(int cfd, int *code);
 
 private:
     std::string recv(size_t buffer_size);
-    bool send(const std::string& msg);
+    int recvV2(int cfd, char *buffer, size_t buffer_size);
+    bool send(const std::string &msg);
+    bool sendV2(char *buffer, size_t size, int cfd);
 
 private:
     int connectFd;
 };
-
-TcpSocket::TcpSocket()
-{
-    connectFd = socket(ipv4, SOCK_STREAM, 0);
-}
-
-TcpSocket::TcpSocket(int socket)
-{
-    connectFd = socket;
-}
-
-TcpSocket::~TcpSocket()
-{
-    if (connectFd > 0)CLOSE_SOCKET(connectFd);
-}
-
-int TcpSocket::toHost(std::string ip, port_t port)
-{
-    struct sockaddr_in saddr;
-    saddr.wsF = ipv4;
-    saddr.wsP = htons(port);
-    SET_IPv4(ip, saddr);
-
-    int ret = connect(connectFd, sitos & saddr, sizeof(saddr));
-
-    STRPRT_EQ_M1(ret, "Error: connect failed");
-    RET_EQ_M1(ret, -1);
-
-    STRPRT("Connected!");
-
-    return ret;
-
-}
-
-int TcpSocket::getConnectFd()
-{
-    return connectFd;
-}
-
-
-bool TcpSocket::send(const std::string& msg) {
-
-    return ::send(connectFd, msg.c_str(), msg.size(), 0) > 0;
-
-}
-
-std::string TcpSocket::recv(size_t buffer_size = DATA_BUFF_SIZE) {
-    // 分配空间
-    char* buf = new char[buffer_size];
-    if (::recv(connectFd, buf, buffer_size, 0) < 0)
-    {
-        delete[] buf;
-        std::cout << "Error: recv failed" << std::endl;
-        return "";
-    }
-
-    std::string msg = buf;
-    delete[] buf;
-    return msg;
-}
-
-
-
-
-bool TcpSocket::sendMsg(const std::string& msg) {
-    // 发送两个信息，一个长度一个data
-    bool ret = ::send(connectFd, msg.c_str(), msg.size() + 1, 0) > 0;
-    return ret;
-}
-
-std::string TcpSocket::recvMsg(size_t buffer_size = DATA_BUFF_SIZE) {
-    std::string msg = recv(buffer_size);
-    return msg;
-}
-
-
-// typedef struct MyMsgV2
-// {
-//     unsigned long header;
-//     char requestType;
-//     char username[40];
-//     char msgType;
-//     unsigned long msgLength;
-//     char* msg;
-// }v2msg;
-
-
-
-
-
-
-
-bool TcpSocket::SendMsgV2(const v2msg& msg, int cfd)
-{
-    // header 4B
-    // request type 1B -> login? msg? function?
-    // username 40B
-    // msg type 1B -> private? chatroom?
-    // msg length 4B 
-    // msg ?B
-
-    // typedef struct MyMsgV2
-    // {
-    //     unsigned long header;
-    //     char requestType;
-    //     char username[40];
-    //     char msgType;
-    //     unsigned long msgLength;
-    //     char* msg;
-    // }v2msg;
-
-    std::string msgBody = msg.msg;
-
-    char* data = (char*)malloc(
-        sizeof(msg.header)
-        + sizeof(msg.requestType)
-        + sizeof(msg.username)
-        + sizeof(msg.msgType)
-        + sizeof(msg.msgLength)
-        + msg.msgLength
-    );
-    unsigned long bigInt = htonl(msg.header);
-    int dataOffset = 0;
-
-    memcpy(data + dataOffset, &bigInt, sizeof(bigInt));
-    dataOffset += sizeof(bigInt);
-
-    memcpy(data + dataOffset, &msg.requestType, sizeof(msg.requestType));
-    dataOffset += sizeof(msg.requestType);
-
-    memcpy(data + dataOffset, &msg.username, sizeof(msg.username));
-    dataOffset += sizeof(msg.username);
-
-    memcpy(data + dataOffset, &msg.msgType, sizeof(msg.msgType));
-    dataOffset += sizeof(msg.msgType);
-
-    memcpy(data + dataOffset, &msg.msgLength, sizeof(msg.msgLength));
-    dataOffset += sizeof(msg.msgLength);
-
-    // for(int i = 0; i < )
-
-    // auto cstr = msg.msg.c_str();
-    memcpy(data + dataOffset, msg.msg, msg.msgLength);
-    dataOffset += msg.msgLength;
-    std::string dbg = data;
-
-    ::send(cfd, data, dataOffset, 0);
-
-    
-
-
-
-    return true;
-}
-std::string TcpSocket::recvMsgV2()
-{
-    std::string retStr {};
-    unsigned long bufSize = std::stoi(recv());
-    retStr = recv();
-
-
-    return retStr;
-}
-
-
-
-
-
-
 
 class serverTCP
 {
@@ -387,71 +225,11 @@ public:
     serverTCP();
     ~serverTCP();
     int stcpListen(port_t port);
-    TcpSocket* stcpAccept(struct sockaddr_in* saddr = nullptr);
+    TcpSocket *stcpAccept(struct sockaddr_in *saddr = nullptr);
     int getListenFd();
 
 private:
     int listenFd;
 };
 
-// define
-serverTCP::serverTCP()
-{
-    listenFd = socket(ipv4, SOCK_STREAM, 0);
-}
-
-serverTCP::~serverTCP() {
-    CLOSE_SOCKET(listenFd);
-}
-
-int serverTCP::getListenFd()
-{
-    return listenFd;
-}
-
-int serverTCP::stcpListen(port_t port)
-{
-    struct sockaddr_in saddr;
-    saddr.wsF = ipv4;
-    saddr.wsP = htons(port);
-    saddr.wsAd = INADDR_ANY;
-
-    int ret = bind(listenFd, sitos & saddr, sizeof(saddr));
-
-    STRPRT_EQ_M1(ret, "Error: bind failed");
-    STRPRT_EQ_ZR(ret, "Server Binded");
-
-    ret = listen(listenFd, LSTN_MAX);
-
-    STRPRT_EQ_M1(ret, "Error: listen failed");
-    STRPRT_EQ_ZR(ret, "Listening...");
-
-    return ret;
-
-
-}
-
-TcpSocket* serverTCP::stcpAccept(sockaddr_in* saddr)
-{
-    if (saddr == NULL)return nullptr;
-
-    ADDRLEN addrlen = sizeof(struct sockaddr_in);
-
-    int connectFd = accept(listenFd, sitos & saddr, &addrlen);
-
-    STRPRT_EQ_M1(connectFd, "Error: accept failed");
-
-    RET_EQ_M1(connectFd, nullptr);
-
-    STRPRT("Connected! ");
-
-    // 返回由cfd来new的通信类
-    return new TcpSocket(connectFd);
-
-
-
-}
-
-
 #endif
-

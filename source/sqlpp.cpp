@@ -1,6 +1,4 @@
-#include "../include/sqlpp.h"
-#include<string>
-
+#include "sqlpp.h"
 using namespace std;
 Mapi::Mapi(){
     conn = mysql_init(nullptr);
@@ -16,8 +14,23 @@ Mapi::~Mapi(){
 
 bool Mapi::connect(string user, string passwd, string dbName, string ip, unsigned short port)
 {
-    mysql_real_connect(conn, ip.c_str(), user.c_str(), passwd.c_str(),dbName.c_str(), port, NULL, 0);
-    return true;
+    bool ret;
+    if(dbName == "")
+    {
+        if(mysql_real_connect(conn, ip.c_str(), user.c_str(), passwd.c_str(), NULL, port, NULL, 0))
+        {
+            return true;
+        }    
+        else return false;
+    }
+    else
+    {
+        if(mysql_real_connect(conn, ip.c_str(), user.c_str(), passwd.c_str(),dbName.c_str(), port, NULL, 0))
+        {
+            return true;
+        }    
+        else return false;
+    }
 }
 
 bool Mapi::update(string sql){
@@ -44,13 +57,15 @@ bool Mapi::query(string sql){
 bool Mapi::next(){
     if(mRes != nullptr){
         mRow = mysql_fetch_row(mRes);
+        if(mRow == NULL)return false;
     }
+    else return false;    
     return true;
 }
 
-string Mapi::value(int index){
+string Mapi::value(int index = 0){
     int rowNumber = mysql_num_fields(mRes);
-    if(rowNumber >= rowNumber || rowNumber < 0){
+    if(index >= rowNumber || index < 0){
         return string();
     }
     char* val =  mRow[index];
@@ -58,6 +73,9 @@ string Mapi::value(int index){
     return string(val, length); // avoid '\0'
 
 }
+
+
+
 
 bool Mapi::transaction(){
     return mysql_autocommit(conn, false);
@@ -76,3 +94,4 @@ void Mapi::ReleaseResult(){
         mysql_free_result(mRes);
     }
 }
+

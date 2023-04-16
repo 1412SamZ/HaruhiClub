@@ -1,40 +1,31 @@
 #pragma once
 #include <stdio.h>
 #include<string.h>
+#include<regex>
+#include <map>
+#include <vector>
+#include<iostream>
+#include <string>
+#include<sys/epoll.h>
+#include<dirent.h>
+#include<cstring>
 
-#define CMD_RESULT_BUF_SUZE 8192
+#include <fstream>
+#include <sstream>
+#include <unistd.h>
+#include <stdlib.h>
+#include <unordered_map>
+#define CMD_RESULT_BUF_SUZE 8192 * 4
 
+using namespace std;
 
+vector<string> strsplit(const string& str, char delim = '\n');
+std::string ExecuteCMD(const char* cmd);
+std::string threadVm(string pid);
+std::string threadCpu(string pid);
+std::string listDir(const string& path = "/proc");
 
-std::string ExecuteCMD(const char* cmd)
-{
-    int iRet = -1;
-    char result[CMD_RESULT_BUF_SUZE] = {0} ;
-    char buf_ps[CMD_RESULT_BUF_SUZE];
-    char ps[CMD_RESULT_BUF_SUZE] = {0};
-    FILE* ptr;
-
-    strcpy(ps, cmd);
-
-    if((ptr = popen(ps, "r") )!= NULL)
-    {
-        while(fgets(buf_ps, sizeof(buf_ps), ptr) != NULL)
-        {
-            strcat(result, buf_ps);
-            if(strlen(result) > CMD_RESULT_BUF_SUZE - 1)break;
-            memset(buf_ps, 0, CMD_RESULT_BUF_SUZE);
-        }
-        pclose(ptr);
-        ptr = nullptr;
-        return result;
-    }
-    else{
-        printf("popen %s failed!\n", ps);
-        return "";
-    }
-
-}
-
+bool isPid(const char* pidStr);
 
 
 
